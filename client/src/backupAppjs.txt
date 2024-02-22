@@ -1,0 +1,275 @@
+import React, { useState, useEffect, useRef } from 'react';
+import ChatBot from 'react-simple-chatbot';
+import {Segment} from 'semantic-ui-react';
+import axios from 'axios';
+import botAvatar from './vitroxlogo.png';
+
+const Classifier = ({ steps, triggerNextStep }) => {
+  useEffect(() => {
+    let isSubscribed = true;
+    // Maybe add a new condition to check for classifications????
+    if (steps.UserPrompt.value && isSubscribed) {
+      console.log(steps.UserPrompt.value);
+      axios.post('http://localhost:5000/predict', { sentence: steps.UserPrompt.value })
+        .then(response => {
+          if (response.data.class === 'Ambiguous'){
+            triggerNextStep({
+              trigger: 'Ambiguous'
+            });
+          } else if (response.data.class === 'best_machine') {
+            triggerNextStep({
+              trigger: 'BestMachine',
+              value: response.data.class,
+            }); 
+          }
+          else if (response.data.class === 'worst_machine') {
+            triggerNextStep({
+              trigger: 'WorstMachine',
+              value: response.data.class,
+            }); 
+          }
+          else if (response.data.class === 'best_employee') {
+            triggerNextStep({
+              trigger: 'BestEmployee',
+              value: response.data.class,
+            }); 
+          }
+          else if (response.data.class === 'worst_employee') {
+            triggerNextStep({
+              trigger: 'WorstEmployee',
+              value: response.data.class,
+            }); 
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching classification:", error);
+          triggerNextStep({
+            trigger: 'Error',
+            value: "Sorry, I couldn't get the classification.",
+          });
+        });
+    }
+    return () => {
+      isSubscribed = false;
+    }
+  }, [steps.UserPrompt.value, triggerNextStep]);
+
+  return null;
+};
+
+const ClassifierLoop = ({ steps, triggerNextStep }) => {
+  useEffect(() => {
+    let isSubscribed = true;
+    // Maybe add a new condition to check for classifications????
+    if (steps.UserPrompt.value && isSubscribed) {
+      console.log(steps.UserPromptLoop.value);
+      axios.post('http://localhost:5000/predict', { sentence: steps.UserPromptLoop.value })
+        .then(response => {
+          if (response.data.class === 'Ambiguous'){
+            triggerNextStep({
+              trigger: 'Ambiguous'
+            });
+          } else if (response.data.class === 'best_machine') {
+            triggerNextStep({
+              trigger: 'BestMachine',
+              value: response.data.class,
+            }); 
+          }
+          else if (response.data.class === 'worst_machine') {
+            triggerNextStep({
+              trigger: 'WorstMachine',
+              value: response.data.class,
+            }); 
+          }
+          else if (response.data.class === 'best_employee') {
+            triggerNextStep({
+              trigger: 'BestEmployee',
+              value: response.data.class,
+            }); 
+          }
+          else if (response.data.class === 'worst_employee') {
+            triggerNextStep({
+              trigger: 'WorstEmployee',
+              value: response.data.class,
+            }); 
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching classification:", error);
+          triggerNextStep({
+            trigger: 'Error',
+            value: "Sorry, I couldn't get the classification.",
+          });
+        });
+    }
+    return () => {
+      isSubscribed = false;
+    }
+  }, [steps.UserPromptLoop.value, triggerNextStep]);
+
+  return null;
+};
+
+const FetchBestMachine = ({ triggerNextStep }) => {
+  useEffect(() => {
+    axios.post('http://localhost:5000/retrieve_best_machine')
+      .then(response => {
+        triggerNextStep({
+          trigger: 'ShowBestMachine',
+          value: {
+            machine: response.data.machine,
+            oee: response.data.oee
+          },
+        });
+      })
+      .catch(error => {
+        console.error("Error fetching the best machine:", error);
+        triggerNextStep({
+          trigger: 'Error',
+          value: "Sorry, I couldn't retrieve the best machine.",
+        });
+      });
+  }, [triggerNextStep]);
+
+  // This component does not render anything
+  return null;
+};
+
+const FetchWorstMachine = ({ triggerNextStep }) => {
+  useEffect(() => {
+    // Make the HTTP POST request to the backend endpoint
+    axios.post('http://localhost:5000/retrieve_worst_machine')
+      .then(response => {
+        // If the request is successful, trigger the next step with the best machine details
+        triggerNextStep({
+          trigger: 'ShowWorstMachine',
+          value: {
+            machine: response.data.machine,
+            oee: response.data.oee
+          },
+        });
+      })
+      .catch(error => {
+        // If there is an error, log it and trigger an error step
+        console.error("Error fetching the worst machine:", error);
+        triggerNextStep({
+          trigger: 'Error',
+          value: "Sorry, I couldn't retrieve the worst machine.",
+        });
+      });
+  }, [triggerNextStep]);
+
+  // This component does not render anything
+  return null;
+};
+
+function App() {
+
+    const steps = [
+      {
+        id: 'Greet',
+        message: 'Hello, how may I assist you today?',
+        trigger: 'UserPrompt',
+      },
+      {
+        id: 'UserPrompt',
+        user: true,
+        trigger: 'Classifier',
+      },
+      {
+        id: 'Classifier',
+        component: <Classifier />, 
+      },
+      {
+        id: 'Ambiguous',
+        message: "Sorry I didn't quite catch that, perhaps you could pick one of these options here? ",
+        trigger: 'Options',
+      },
+      {
+        id: 'Options',
+        options: [
+          { value: "best_machine", label: "Best machine", trigger: "BestMachine" },
+          { value: "worst_machine", label: "Worst machine", trigger: "WorstMachine" },
+          { value: "best_employee", label: "Best employee", trigger: "BestEmployee" },
+          { value: "worst_employee", label: "Worst employee", trigger: "WorstEmployee" },
+        ]
+      },
+      {
+        id: 'BestMachine',
+        component: <FetchBestMachine />,
+        waitAction: true,
+      },
+      {
+        id: 'ShowBestMachine',
+        message: ({ previousValue }) => `Best machine this month is ${previousValue.machine} with an oee of ${previousValue.oee}%`,
+        trigger: 'UserDecision',
+      },
+      {
+        id: 'WorstMachine',
+        component: <FetchWorstMachine />,
+        waitAction: true,
+      },
+      {
+        id: 'ShowWorstMachine',
+        message: ({ previousValue }) => `Worst machine this month is ${previousValue.machine} with an oee of ${previousValue.oee}%`,
+        trigger: 'UserDecision',
+      },
+      {
+        id: 'BestEmployee',
+        message: 'Best employee this month is Brandon, with a personal score of 100%',
+        trigger: 'UserDecision',
+      },
+      {
+        id: 'WorstEmployee',
+        message: 'Worst employee this month is Brandon, with a personal score of 10%',
+        trigger: 'UserDecision',
+      },
+      {
+        id: 'UserDecision',
+        options: [
+          { value: "Ask", label: "Ask another question", trigger: "UserPromptLoop" },
+          { value: "End", label: "End conversation", trigger: "Goodbye" }
+        ]
+      },
+      {
+        id: 'UserPromptLoop',
+        user: true,
+        trigger: 'ClassifierLoop',
+      },
+      {
+        id: 'ClassifierLoop',
+        component: <ClassifierLoop />, 
+      },
+      {
+        id: 'Error',
+        message: ({ previousValue }) => previousValue,
+        trigger: 'FollowUp',
+      },
+      {
+        id: 'FollowUp',
+        message: 'Anything else I can help you with?',
+        trigger: 'ConfirmMoreQuestions',
+      },
+      {
+        id: "ConfirmMoreQuestions",
+        options: [
+          { value: "Yes", label: "Yes", trigger: "UserPrompt" }, 
+          { value: "No", label: "No", trigger: "Goodbye" } 
+        ]
+      },
+      {
+        id: "Goodbye",
+        message: "Bye",
+        end: true
+      }
+    ];
+
+    return (
+      <Segment floated="right">
+        <ChatBot key="unique-chatbot-key" recognitionEnable={true} steps={steps} botAvatar={botAvatar}/>
+      </Segment>
+    );
+    
+}
+
+export default App;

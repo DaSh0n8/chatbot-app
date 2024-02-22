@@ -1,0 +1,75 @@
+// const Classifier = ({ steps, triggerNextStep }) => {
+//   useEffect(() => {
+//     let isSubscribed = true;
+//     // Maybe add a new condition to check for classifications????
+//     if (steps.UserPrompt.value && isSubscribed) {
+//       console.log(steps.UserPrompt.value);
+//       axios.post('http://localhost:5000/predict', { sentence: steps.UserPrompt.value })
+//         .then(response => {
+//           if (response.data.class === 'Ambiguous'){
+//             triggerNextStep({
+//               trigger: 'Ambiguous'
+//             });
+//           } else {
+//             triggerNextStep({
+//               trigger: 'ShowClassification',
+//               value: response.data.class,
+//             }); 
+//           }
+//         })
+//         .catch(error => {
+//           console.error("Error fetching classification:", error);
+//           triggerNextStep({
+//             trigger: 'Error',
+//             value: "Sorry, I couldn't get the classification.",
+//           });
+//         });
+//     }
+//     return () => {
+//       isSubscribed = false;
+//     }
+//   }, [steps.UserPrompt.value, triggerNextStep]);
+
+//   return null;
+// };
+
+
+  
+// function ClassifierComponent({ steps, triggerNextStep }) {
+//   const lastClassifiedInputRef = useRef("");
+
+//   useEffect(() => {
+//     console.log("Component Mounted");
+
+//     return () => {
+//       console.log("Component Unmounted");
+//     };
+//   }, []);
+
+//   useEffect(() => {
+//     const userInput = steps.UserPrompt.value;
+
+//     console.log("User input - " + userInput);
+//     console.log("Last classified input - " + lastClassifiedInputRef.current);
+
+//     if (userInput && userInput !== lastClassifiedInputRef.current && userInput.trim() !== "") {
+//       lastClassifiedInputRef.current = userInput;
+//       axios.post('http://localhost:5000/predict', { sentence: userInput })
+//         .then(response => {
+//           const data = response.data;
+//           if (data.class === 'Ambiguous') {
+//             triggerNextStep({ trigger: 'Ambiguous' });
+//           } else {
+//             triggerNextStep({ trigger: 'ShowClassification', value: data.class });
+//           }
+//         })
+//         .catch(error => {
+//           console.error("Error fetching classification:", error);
+//           triggerNextStep({ trigger: 'Error' });
+//         });
+//     }
+//   }, [steps.UserPrompt.value, triggerNextStep]);
+
+//   return <div>Classifying...</div>;
+// }
+

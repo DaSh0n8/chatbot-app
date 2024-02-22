@@ -1,0 +1,4 @@
+node_modules
+server/myenv39
+server/model/tf_model.h5
+server/config.json
